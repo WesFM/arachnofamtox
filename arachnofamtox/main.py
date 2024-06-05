@@ -3,9 +3,9 @@ import sys
 from pathlib import Path
 import os 
 import pandas as pd 
-from .tools import run_hmmscan,run_rpsblast,run_blastp,parse_hmmscan
+from .tools import run_hmmscan,run_rpsblast,run_blastp,parse_hmmscan,run_signalp
 from .define_final_results import define_final,gen_final_class_and_evalue,gen_score,filter_results,define_general_class,define_target_final
-from .util import db_dir,output_dir,cpus,search_tools,setup,warn,remove_temp_files,line_prepender
+from .util import db_dir,output_dir,cpus,search_tools,setup,warn,remove_temp_files,line_prepender,filter_signalp
 
 
 parser = argparse.ArgumentParser(prog="ArachnoFamTox",description= 'Prediction and Classification of Toxins and Venom Proteins for Arachnid species')
@@ -15,8 +15,14 @@ parser.add_argument('-fasta', metavar='<fasta file>' ,help='Specify fasta file')
 parser.add_argument("-path", metavar='<string>', default="db",
         help="Specify models directory path. Default=db")
 
-parser.add_argument("-model_name", metavar='<string>', default="ArachnoFamTox",
-        help="Specify models name. Default=ArachnoFamTox")
+parser.add_argument("-model_name_PSSM", metavar='<string>', default="ArachnidaToxinsV3",
+        help="Specify models name. Default=ArachnidaToxinsV3")
+
+parser.add_argument("-model_name_HMM", metavar='<string>', default="Arachnida",
+        help="Specify models name. Default=Arachnida")
+
+#parser.add_argument("-model_name_toxprot", metavar='<string>', default="toxprot",
+#        help="Specify models name. Default=toxprot")
 
 parser.add_argument('-eHMM',metavar='<evalue>',
         type=float,help='e-value for HMMSCAN. Default=1e-1',default=1e-1) 
@@ -50,6 +56,9 @@ parser.add_argument("--force",action="store_true",
 
 parser.add_argument("--tempfiles",action="store_true",
         help="Maintain temporary files. Default=Off.")
+
+parser.add_argument("--signalp",action="store_true",
+        help="Perform Signalp analysis. Default=Off.")
 
 
 args = parser.parse_args()
@@ -221,12 +230,19 @@ def run():
     
     line_prepender(hmmscan,'record\thits\te-value\tbitscore\taccuracy\tlength\tdescription\tstart\tend\n')
     line_prepender(rps, 'qseqid\tsseqid\tpident\tlength\tmismatch\tgapopen\tqstart\tqend\tsstart\tsend\tevalue\tbitscore\tqcovs\tppos\n')
+    
+    if args.signalp == True:
+        signalp = run_signalp(fasta,args)
+        filter_signalp(signalp,args)
 
     if args.tempfiles == False:
         remove_temp_files(args)
     warn("stdout", "Finished analysis.")
     return None
 
-if __name__ == "__main__":
-    run()
+def runn():
+    #fasta = str(args.fasta)
+    #run_signalp(fasta,args)
+    filter_signalp("./out_test_dir/signalp_predictions.tsv",args)
+
 

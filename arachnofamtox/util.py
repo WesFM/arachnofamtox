@@ -89,4 +89,18 @@ def line_prepender(filename, line):
     with open(filename, 'r+') as f:
         content = f.read()
         f.seek(0, 0)
-        f.write(line + content)
+        f.write(line + content) 
+
+# Filter signalp predictions for sequences with signal peptides 
+def filter_signalp(tsv,args):
+    outfile = open((Path(args.out, "signalp_predictions_filtered.tsv")), "w")
+    with open(tsv, 'r') as t:
+        for line in t:
+            if line.startswith('#'):
+                outfile.write(str(line))
+            else:
+                if str(line.split('\t')[1].strip()) == "SP(Sec/SPI)":
+                    outfile.write(str(line))
+    return None
+
+
